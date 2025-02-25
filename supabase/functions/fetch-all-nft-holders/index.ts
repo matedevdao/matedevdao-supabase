@@ -32,8 +32,8 @@ serve(async (req) => {
   const { from, to } = range;
   let holderList: string[] = [];
 
-  for (let start = from; start <= to; start += 500) {
-    const end = Math.min(start + 499, to);
+  for (let start = from; start <= to; start += 100) {
+    const end = Math.min(start + 99, to);
     const tokenIds: bigint[] = [];
     for (let i = start; i <= end; i++) {
       tokenIds.push(BigInt(i));
