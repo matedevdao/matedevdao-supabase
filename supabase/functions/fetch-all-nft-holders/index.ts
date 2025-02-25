@@ -1,6 +1,7 @@
 import { createPublicClient, http } from "https://esm.sh/viem@2.21.47";
 import { kaia } from "https://esm.sh/viem@2.21.47/chains";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
+import { safeStore } from "https://raw.githubusercontent.com/yjgaia/supabase-module/refs/heads/main/deno/supabase.ts";
 import ParsingNFTDataArtifact from "./artifacts/ParsingNFTData.json" with {
   type: "json",
 };
@@ -46,7 +47,14 @@ serve(async (req) => {
     }) as string[];
 
     holderList = holderList.concat(batchHolderList);
-  }
 
-  return holderList;
+    await safeStore("nft_holders", (b) =>
+      b.upsert([
+        ...batchHolderList.map((holder, index) => ({
+          nft_address: address,
+          token_id: start + index,
+          holder,
+        })),
+      ]));
+  }
 });

@@ -1,0 +1,6 @@
+nft_holders
+  nft_address - text - pk
+  token_id - numeric - pk
+  holder - text
+	created_at - timestampz - now()
+	updated_at - timestampz - nullable
