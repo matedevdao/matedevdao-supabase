@@ -24,4 +24,13 @@ serve(async (req) => {
     fromBlock,
     toBlock,
   });
+
+  const transfers = logs.map((log) => ({
+    from: log.args.from,
+    to: log.args.to,
+    tokenId: log.args.tokenId,
+    blockNumber: log.blockNumber,
+    transactionHash: log.transactionHash,
+    logIndex: log.logIndex,
+  }));
 });
