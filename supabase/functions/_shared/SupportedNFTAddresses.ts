@@ -1,4 +1,4 @@
-const SupportedNFTAddresses = [
+const SupportedNFTAddresses: `0x${string}`[] = [
   "0xE47E90C58F8336A2f24Bcd9bCB530e2e02E1E8ae", // DogeSoundClub Mates
   "0x2B303fd0082E4B51e5A6C602F45545204bbbB4DC", // DogeSoundClub E-Mates
   "0xDeDd727ab86bce5D416F9163B2448860BbDE86d4", // DogeSoundClub Biased Mates

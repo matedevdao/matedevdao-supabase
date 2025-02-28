@@ -1,0 +1,4 @@
+parsed_contract_event_blocks
+  contract_address - text - pk
+  last_parsed_block - int8 - not null
+	updated_at - timestampz - now()
