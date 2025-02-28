@@ -1,5 +1,5 @@
-import { createPublicClient, http } from "https://esm.sh/viem@2.21.47";
-import { kaia } from "https://esm.sh/viem@2.21.47/chains";
+import { createPublicClient, http } from "https://esm.sh/viem@2.23.5";
+import { kaia } from "https://esm.sh/viem@2.23.5/chains";
 import { serve } from "https://raw.githubusercontent.com/yjgaia/deno-module/refs/heads/main/api.ts";
 import { safeStore } from "https://raw.githubusercontent.com/yjgaia/supabase-module/refs/heads/main/deno/supabase.ts";
 import ParsingNFTDataArtifact from "./artifacts/ParsingNFTData.json" with {
@@ -22,39 +22,35 @@ const tokenIdsRanges: { [address: string]: { from: number; to: number } } = {
   "0x595b299Db9d83279d20aC37A85D36489987d7660": { from: 0, to: 2999 }, // BabyPing
 };
 
-serve(async (req) => {
-  const { address } = await req.json();
-  if (!address) throw new Error("Invalid request");
+serve(async () => {
+  for (const [address, range] of Object.entries(tokenIdsRanges)) {
+    const { from, to } = range;
+    let holderList: string[] = [];
 
-  const range = tokenIdsRanges[address];
-  if (!range) throw new Error("Token ID range for provided address not found");
+    for (let start = from; start <= to; start += 100) {
+      const end = Math.min(start + 99, to);
+      const tokenIds: bigint[] = [];
+      for (let i = start; i <= end; i++) {
+        tokenIds.push(BigInt(i));
+      }
 
-  const { from, to } = range;
-  let holderList: string[] = [];
+      const batchHolderList = await kaiaPublicClient.readContract({
+        address: PARSING_NFT_DATA_CONTRACT_ADDRESS,
+        abi: ParsingNFTDataArtifact.abi,
+        functionName: "getERC721HolderList",
+        args: [address, tokenIds],
+      }) as string[];
 
-  for (let start = from; start <= to; start += 100) {
-    const end = Math.min(start + 99, to);
-    const tokenIds: bigint[] = [];
-    for (let i = start; i <= end; i++) {
-      tokenIds.push(BigInt(i));
+      holderList = holderList.concat(batchHolderList);
+
+      await safeStore("nft_holders", (b) =>
+        b.upsert([
+          ...batchHolderList.map((holder, index) => ({
+            nft_address: address,
+            token_id: start + index,
+            holder,
+          })),
+        ]));
     }
-
-    const batchHolderList = await kaiaPublicClient.readContract({
-      address: PARSING_NFT_DATA_CONTRACT_ADDRESS,
-      abi: ParsingNFTDataArtifact.abi,
-      functionName: "getERC721HolderList",
-      args: [address, tokenIds],
-    }) as string[];
-
-    holderList = holderList.concat(batchHolderList);
-
-    await safeStore("nft_holders", (b) =>
-      b.upsert([
-        ...batchHolderList.map((holder, index) => ({
-          nft_address: address,
-          token_id: start + index,
-          holder,
-        })),
-      ]));
   }
 });

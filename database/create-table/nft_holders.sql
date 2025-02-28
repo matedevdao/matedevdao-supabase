@@ -1,9 +1,7 @@
 CREATE TABLE IF NOT EXISTS "public"."nft_holders" (
   "nft_address" "text" NOT NULL,
   "token_id" numeric NOT NULL,
-  "holder" "text" NOT NULL,
-  "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-  "updated_at" timestamp with time zone
+  "holder" "text" NOT NULL
 );
 
 ALTER TABLE "public"."nft_holders" OWNER TO "postgres";
