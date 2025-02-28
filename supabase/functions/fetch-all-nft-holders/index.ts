@@ -22,35 +22,39 @@ const tokenIdsRanges: { [address: string]: { from: number; to: number } } = {
   "0x595b299Db9d83279d20aC37A85D36489987d7660": { from: 0, to: 2999 }, // BabyPing
 };
 
-serve(async () => {
-  for (const [address, range] of Object.entries(tokenIdsRanges)) {
-    const { from, to } = range;
-    let holderList: string[] = [];
+serve(async (req) => {
+  const { address } = await req.json();
+  if (!address) throw new Error("Invalid request");
 
-    for (let start = from; start <= to; start += 100) {
-      const end = Math.min(start + 99, to);
-      const tokenIds: bigint[] = [];
-      for (let i = start; i <= end; i++) {
-        tokenIds.push(BigInt(i));
-      }
+  const range = tokenIdsRanges[address];
+  if (!range) throw new Error("Token ID range for provided address not found");
 
-      const batchHolderList = await kaiaPublicClient.readContract({
-        address: PARSING_NFT_DATA_CONTRACT_ADDRESS,
-        abi: ParsingNFTDataArtifact.abi,
-        functionName: "getERC721HolderList",
-        args: [address, tokenIds],
-      }) as string[];
+  const { from, to } = range;
+  let holderList: string[] = [];
 
-      holderList = holderList.concat(batchHolderList);
-
-      await safeStore("nft_holders", (b) =>
-        b.upsert([
-          ...batchHolderList.map((holder, index) => ({
-            nft_address: address,
-            token_id: start + index,
-            holder,
-          })),
-        ]));
+  for (let start = from; start <= to; start += 100) {
+    const end = Math.min(start + 99, to);
+    const tokenIds: bigint[] = [];
+    for (let i = start; i <= end; i++) {
+      tokenIds.push(BigInt(i));
     }
+
+    const batchHolderList = await kaiaPublicClient.readContract({
+      address: PARSING_NFT_DATA_CONTRACT_ADDRESS,
+      abi: ParsingNFTDataArtifact.abi,
+      functionName: "getERC721HolderList",
+      args: [address, tokenIds],
+    }) as string[];
+
+    holderList = holderList.concat(batchHolderList);
+
+    await safeStore("nft_holders", (b) =>
+      b.upsert([
+        ...batchHolderList.map((holder, index) => ({
+          nft_address: address,
+          token_id: start + index,
+          holder,
+        })),
+      ]));
   }
 });

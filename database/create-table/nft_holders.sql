@@ -16,5 +16,3 @@ GRANT ALL ON TABLE "public"."nft_holders" TO "authenticated";
 GRANT ALL ON TABLE "public"."nft_holders" TO "service_role";
 
 CREATE POLICY "Allow read access for all users" ON "public"."nft_holders" FOR SELECT USING (true);
-
-CREATE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."nft_holders" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
